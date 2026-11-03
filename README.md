@@ -38,6 +38,19 @@ The port opens the switches, supplies an HIP/CUDA compatibility layer
 the 18 MMQ kernels through `LANGUAGE HIP`, and excludes MXFP4 (Blackwell FP4
 MMA-only path, absent on gfx906). Details in `docs/PORT-NOTES-gfx906.md`.
 
+## Getting started on your own machine
+
+Full step-by-step walkthrough (ROCm 6.3 install, model preparation, config
+explanation, launch, API usage, troubleshooting): see
+**[docs/USAGE.zh-CN.md](docs/USAGE.zh-CN.md)** (Chinese). Short version:
+
+```bash
+cp -r overlay/* /path/to/strata/          # apply overlay
+cmake -B build -DSTRATA_HIP=ON -DSTRATA_HIP_GFX906=ON && cmake --build build -j
+# prepare UD-Q4_K_M main file + MTP draft sidecar (see USAGE §3)
+python -m serve.server --engine strata --config occamy-main-q4.json --port 8099
+```
+
 ## Applying the overlay
 
 ```bash
