@@ -1,0 +1,7 @@
+This repository is an overlay distribution for the Strata inference engine
+(MIT License, Copyright Niko1221 and the Strata contributors). Complete
+replacement copies of upstream files are redistributed under their original
+MIT license with their original copyright notices intact. New files authored
+for the gfx906 port (include/strata/hip_compat/**,
+include/strata/platform/hip_compat/**, configs, scripts, docs) are MIT
+licensed by FasFox.

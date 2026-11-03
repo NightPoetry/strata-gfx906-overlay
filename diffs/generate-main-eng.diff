@@ -1,0 +1,12 @@
+--- /Users/nightpoetry/AGI/scripts/quant-probe/video/release/mi50-strata-gfx906/overlay/src/program/generate.cpp.bak-main-eng-20261101	2026-11-01 00:20:58
++++ /Users/nightpoetry/AGI/scripts/quant-probe/video/release/mi50-strata-gfx906/overlay/src/program/generate.cpp	2026-11-01 00:20:58
+@@ -2262,7 +2262,8 @@
+         } catch (const std::exception&) {
+             // not readable here: the normal path below reports it
+         }
+-        if (qwen35) return strata::qwen35::run(argc, argv);
++        if (qwen35 && !(std::getenv("STRATA_MAIN_ENGINE") && std::getenv("STRATA_MAIN_ENGINE")[0] == '1'))
++            return strata::qwen35::run(argc, argv);
+         break;
+     }
+ #endif
