@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # quant-probe: 量化差距探测套件 — 四室程序化判分（无裁判模型）
-# 思考预算 8192 不设上限（主人令 2026-11-01）: 每题记录 思考字符数/正文字符数/总生成token，
+# think budget pinned at 8192, uncapped generation (2026-11-01 protocol): per-task
+# think chars / answer chars / total generated tokens are recorded,
 # 思考消耗本身作为跨量化档指标（同 tokenizer 可比）
 # 用法: python3 probe.py <port> <tag> [suite...]  输出: /data/ai/quant-probe/results/<tag>-<suite>.json
 import json, gzip, os, random, re, subprocess, sys, time, urllib.request
