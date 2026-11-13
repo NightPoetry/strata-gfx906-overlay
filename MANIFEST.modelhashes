@@ -1,0 +1,18 @@
+# Production model pinning (what we actually ran; download-then-verify)
+# Main = Unsloth UD dynamic quant of the base Qwen3.6-35B-A3B (NOT the
+# Accio-Lab occamy-1.0 finetune — see docs/USAGE.zh-CN.md §3 for the
+# metadata-based identity check).
+# Source: https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF
+
+Qwen3.6-35B-A3B-UD-Q4_K_M.gguf
+  bytes   = 22663387424          # our production copy (mirror-drifted era download)
+  sha256  = 0b21525e972670ed59e1812e170b27c26355381f0656ecc4e25617ece7dac58b
+  note    = stripped-main production flow: upstream current file is
+            22134528992 bytes (block_count 40, no draft layer); if your copy
+            declares a draft layer whose sizes do not fit the file, run
+            scripts/gguf-surgery/strip40.py and sidecar the draft instead.
+
+occamy-mtp-q4.gguf (MTP draft sidecar, q4)
+  bytes   = 1260897824
+  sha256  = f8b0e6174daa6a2ed82d05f6136870ac86e6762bcd42a00dfffdd3397d9be863
+  note    = exact file we ran; equivalent alternatives listed in USAGE §3.2.

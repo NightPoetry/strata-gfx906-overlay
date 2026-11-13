@@ -36,10 +36,57 @@ cmake --build build -j$(nproc)
 
 ## 3. 准备模型
 
-1. 主模型：Qwen3.6-35B-A3B 的 **UD-Q4_K_M** 动态量化件（Q4 是实测甜点档，见 docs/PERF.md）。
-2. MTP 草稿：`occamy-mtp-q4.gguf` 一类的独立草稿件（约 1.2G），从原版权重提取打包。
-3. **检查社区量化件的草稿层**：社区转换管线会静默裁掉或损坏 nextn 草稿层。用 gguf 元数据自查——`qwen35moe.block_count` 应为 41 且有 nextn 键；若为 40 且无 nextn 键=草稿被裁（旁挂独立草稿即可工作）；若张量声明尺寸与文件不符=损坏（需手术摘掉 blk.40，再旁挂）。
-4. 把模型放到如 `/data/ai/LoadedModel/occamy-1.0/`。
+> **先澄清一个容易踩的坑**：主模型是**基座 Qwen3.6-35B-A3B** 的 Unsloth UD 动态量化件——不是 Accio-Lab 的 Occamy-1.0 微调件。生产环境的存放目录恰好叫 `occamy-1.0/`（本地路径习惯），但文件元数据（`general.basename` = `Qwen3.6-35B-A3B`，`quantized_by` = `Unsloth`，`base_model` = `Qwen/Qwen3.6-35B-A3B`）才是身份凭证。下错微调件的话架构相同能跑，但复现的就不再是本文档的性能与配置。
+
+### 3.1 主模型（约 20.6 GB）
+
+| 项 | 值 |
+|---|---|
+| 文件 | `Qwen3.6-35B-A3B-UD-Q4_K_M.gguf` |
+| 尺寸钉版 | 22,134,528,992 字节 |
+| 来源 | [unsloth/Qwen3.6-35B-A3B-GGUF](https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF)（Q4 是实测甜点档，依据见 docs/PERF.md） |
+| 国内镜像 | `https://hf-mirror.com/unsloth/Qwen3.6-35B-A3B-GGUF/resolve/main/Qwen3.6-35B-A3B-UD-Q4_K_M.gguf` |
+
+```bash
+curl -L -C - -o Qwen3.6-35B-A3B-UD-Q4_K_M.gguf \
+  "https://hf-mirror.com/unsloth/Qwen3.6-35B-A3B-GGUF/resolve/main/Qwen3.6-35B-A3B-UD-Q4_K_M.gguf"
+```
+
+### 3.2 MTP 草稿（旁挂，约 1.2 GB）
+
+投机解码需要一个独立 nextn 草稿文件（`--draft-model`）。三条路任选：
+
+1. **社区现成件**：[Accio-Lab/occamy-1.0-MTP](https://huggingface.co/Accio-Lab/occamy-1.0-MTP)（官方）或 [fetchingcat/occamy-1.0-mtp-gguf](https://huggingface.co/fetchingcat/occamy-1.0-mtp-gguf)——qwen35moe 的 nextn 形状通用，q4/q8 档均可；
+2. **从主文件自提**：若你的主文件带草稿层（见 3.3 自检），用 `scripts/gguf-surgery/` 工具摘出 blk.40 并按 q4 打包；
+3. **我们生产用的确切文件**：`occamy-mtp-q4.gguf`，1,260,897,824 字节，sha256 见 MANIFEST.modelhashes（不在本仓库分发，20GB 级模型不入 git）。
+
+### 3.3 下载后自检（必做）
+
+镜像 LFS 偶发飘移（同一路径服务非钉版对象，实测踩过），下载完先验身再跑：
+
+```bash
+# ① 字节数与 sha256 对表（主模型 22,134,528,992 字节；sha256 见 MANIFEST.modelhashes）
+stat -c %s Qwen3.6-35B-A3B-UD-Q4_K_M.gguf
+sha256sum Qwen3.6-35B-A3B-UD-Q4_K_M.gguf
+# ② 元数据自检（scripts/gguf-surgery/gguf_meta.py）
+python3 gguf_meta.py Qwen3.6-35B-A3B-UD-Q4_K_M.gguf | grep -E 'general.basename|block_count'
+```
+
+判读口径：
+
+- `general.basename` = `Qwen3.6-35B-A3B`——是本文档的模型；若是 `occamy-1.0` 则是 Accio-Lab 微调件（能跑但不是本档）；
+- `qwen35moe.block_count` = 41 且有 nextn 键——自带草稿层，可旁挂也可直用；
+- `block_count` = 40 且无 nextn 键——草稿层被裁（Unsloth 现行版如此），**必须旁挂 3.2 的草稿**；
+- 张量声明尺寸与文件不符（报 `does not fit its file`）——镜像飘移件，换源重下，或用 `strip40.py` 手术摘掉坏层后旁挂（我们生产走过的路）。
+
+### 3.4 备选量化（不推荐但可用）
+
+- [mradermacher/occamy-1.0-GGUF](https://huggingface.co/mradermacher/occamy-1.0-GGUF) Q6_K：16G 上无可用草稿、无投机（诚实口径 20.9 tok/s），质量与 Q4 几乎打平，不建议；
+- [Accio-Lab/occamy-1.0-GGUF](https://huggingface.co/Accio-Lab/occamy-1.0-GGUF) 官方平量化：同样无 nextn 草稿层，需旁挂。
+
+### 3.5 放置
+
+放到如 `/data/ai/LoadedModel/occamy-1.0/`（目录名随意，与 config 同步即可）。
 
 ## 4. 配置与启动
 

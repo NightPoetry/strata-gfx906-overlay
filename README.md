@@ -19,7 +19,8 @@ diffs/      unified diffs against the pre-port state of the two files whose
             pristine copies were retained (CMakeLists.txt, generate.cpp)
 configs/    production config for MI50 16G (UD-Q4_K_M + independent MTP draft,
             262K context, KV q8_0, pinned expert residency via --kv-whole)
-scripts/    launch wrapper and the quantization benchmark suite
+scripts/    launch wrapper, the quantization benchmark suite, and gguf-surgery
+            tooling (metadata inspection / draft-layer strip & merge)
 docs/       port notes and performance measurements
 MANIFEST.sha256
 ```
@@ -47,7 +48,8 @@ explanation, launch, API usage, troubleshooting): see
 ```bash
 cp -r overlay/* /path/to/strata/          # apply overlay
 cmake -B build -DSTRATA_HIP=ON -DSTRATA_HIP_GFX906=ON && cmake --build build -j
-# prepare UD-Q4_K_M main file + MTP draft sidecar (see USAGE §3)
+# download the pinned UD-Q4_K_M main file + MTP draft sidecar (see USAGE §3;
+# main = unsloth/Qwen3.6-35B-A3B-GGUF, byte-pinned)
 python -m serve.server --engine strata --config occamy-main-q4.json --port 8099
 ```
 
