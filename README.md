@@ -1,80 +1,60 @@
-# strata-gfx906-overlay — AMD MI50 (gfx906) port overlay for Strata
+# strata-gfx906-overlay — 在 AMD MI50（gfx906）上运行 Strata 富服务器的移植套件
 
-An overlay distribution that brings the PolyStrata rich server (the full-featured
-qwen35moe path of [Strata](https://github.com/Niko1221/Strata), MIT licensed) to
-AMD Instinct MI50 accelerators under ROCm 6.3, where HIP support had never been
-built upstream and ROCm 6.4 removed the gfx906 target entirely.
+这个仓库提供一套 overlay（覆盖分发包）。它的作用是：把 [Strata](https://github.com/Niko1221/Strata)（MIT 许可）的全功能 qwen35moe 服务路径（PolyStrata 富服务器）带到 AMD Instinct MI50 16G 显卡上，在 ROCm 6.3 下编译并运行。这项移植是必要的，原因有两点：上游从未为 MI50 编译过 HIP 版本；并且 ROCm 6.4 起官方删除了 gfx906 编译目标。
 
-Upstream: Strata (MIT, Copyright Niko1221 and the Strata contributors).
-This overlay adds an HIP/CUDA compatibility layer and build/route switches;
-all additions are MIT licensed by FasFox. See `LICENSE` and `NOTICE`.
+版权归属：上游 Strata 采用 MIT 许可，版权归 Niko1221 与 Strata 贡献者所有。本仓库在其之上新增了 HIP/CUDA 兼容层和编译、路由开关；新增部分由 FasFox 以 MIT 许可发布。详见 LICENSE 与 NOTICE。
 
-## What is included
+## 仓库里有什么
 
 ```
-overlay/    complete replacement copies of every upstream file touched by the
-            port, plus the new include/strata/{hip_compat,platform/hip_compat}
-            headers; apply by copying over a pristine Strata tree
-diffs/      unified diffs against the pre-port state of the two files whose
-            pristine copies were retained (CMakeLists.txt, generate.cpp)
-configs/    production config for MI50 16G (UD-Q4_K_M + independent MTP draft,
-            262K context, KV q8_0, pinned expert residency via --kv-whole)
-scripts/    launch wrapper, the quantization benchmark suite, and gguf-surgery
-            tooling (metadata inspection / draft-layer strip & merge)
-docs/       port notes and performance measurements
-MANIFEST.sha256
+overlay/    上游被改动文件的完整替换副本，以及新增的 include/strata/hip_compat 等
+            头文件。用法：把 overlay/ 的内容复制到一份干净的 Strata 源码树上。
+diffs/      两个未保留原始副本的文件的统一 diff（CMakeLists.txt 与 generate.cpp），
+            便于逐行审阅改动。
+configs/    MI50 16G 的生产配置：UD-Q4_K_M 主模型加独立 MTP 草稿，262K 上下文，
+            KV 用 q8_0，热专家驻留用 --kv-whole 固定。
+scripts/    启动脚本、量化基准测试套件，以及 gguf-surgery 工具（检查 gguf 元
+            数据、摘除或合并草稿层）。
+docs/       移植笔记与性能实测。
+MANIFEST.sha256        overlay 每个文件的 sha256 校验清单。
+MANIFEST.modelhashes   生产模型文件的字节数与 sha256 钉版。
 ```
 
-## Why an overlay exists at all
+## 为什么上游跑不了 gfx906，而这个 overlay 可以
 
-Two upstream decisions kept gfx906 out:
+上游有两处限制。第一处是构建脚本：CMakeLists.txt 在启用 STRATA_HIP 时会把富服务器目标排除掉（共三段，约在 2050、2073、2081 行附近）。第二处是路由代码：generate.cpp 里的 qwen35moe 家族路由会把 qwen35moe 模型派给一个功能缩水的侧引擎。本移植做了三件事来打开这条路：打开上述开关；补一层 HIP/CUDA 兼容层（驱动 VMM shim、cublas 映射、fp16 与内联函数、数学常量头文件）；用 HIP 语言重编 18 个 MMQ 量化内核。另外，MXFP4 路径被主动排除，因为它是 Blackwell FP4 MMA 单元专用路径，gfx906 没有这个单元。完整移植经过见 docs/PORT-NOTES-gfx906.md。
 
-1. `CMakeLists.txt` excludes the rich server target when `STRATA_HIP` is set
-   (`AND NOT STRATA_HIP_GFX906`, three blocks near lines 2050/2073/2081);
-2. the qwen35moe family router (`generate.cpp`) dispatches qwen35moe to a
-   reduced side engine.
+## 在你自己的机器上跑起来
 
-The port opens the switches, supplies an HIP/CUDA compatibility layer
-(driver VMM shim, cublas mappings, fp16/intrinsics/math constants), rebuilds
-the 18 MMQ kernels through `LANGUAGE HIP`, and excludes MXFP4 (Blackwell FP4
-MMA-only path, absent on gfx906). Details in `docs/PORT-NOTES-gfx906.md`.
-
-## Getting started on your own machine
-
-Full step-by-step walkthrough (ROCm 6.3 install, model preparation, config
-explanation, launch, API usage, troubleshooting): see
-**[docs/USAGE.zh-CN.md](docs/USAGE.zh-CN.md)** (Chinese). Short version:
+完整的分步指南（ROCm 6.3 安装、模型下载地址与校验、配置逐项解释、启动、API 调用、常见问题）见 **[docs/USAGE.zh-CN.md](docs/USAGE.zh-CN.md)**。最短路径如下：
 
 ```bash
-cp -r overlay/* /path/to/strata/          # apply overlay
+cp -r overlay/* /path/to/strata/          # 应用 overlay
 cmake -B build -DSTRATA_HIP=ON -DSTRATA_HIP_GFX906=ON && cmake --build build -j
-# download the pinned UD-Q4_K_M main file + MTP draft sidecar (see USAGE §3;
-# main = unsloth/Qwen3.6-35B-A3B-GGUF, byte-pinned)
+# 按 USAGE §3 下载主模型（unsloth UD-Q4_K_M，字节与 sha256 已钉版）和 MTP 草稿
 python -m serve.server --engine strata --config occamy-main-q4.json --port 8099
 ```
 
-## Applying the overlay
+## 应用 overlay 的步骤
 
 ```bash
-# upstream tree, e.g. git clone https://github.com/Niko1221/Strata
+# 上游源码，例如：git clone https://github.com/Niko1221/Strata
 cp -r overlay/* /path/to/strata/
-# verify against MANIFEST.sha256, then:
-cmake -B build -DSTRATA_HIP=ON -DSTRATA_HIP_GFX906=ON <your usual flags>
+# 用 MANIFEST.sha256 校验覆盖结果，然后编译：
+cmake -B build -DSTRATA_HIP=ON -DSTRATA_HIP_GFX906=ON <你常用的其他开关>
 cmake --build build -j$(nproc)
 ```
 
-ROCm 6.3 is required (6.4 dropped gfx906). Built and validated with
-`strata-poly-rich` on MI50 16G; production config in `configs/`.
+ROCm 必须用 6.3（6.4 起没有 gfx906）。本套件在 MI50 16G 上编译并用 `strata-poly-rich` 实测通过；生产配置在 configs/。
 
-## Measured results (MI50 16G, 262K context)
+## 实测结果（MI50 16G，262K 上下文）
 
-| Metric | Value |
+| 指标 | 数值 |
 |---|---|
-| Decode (UD-Q4_K_M + MTP draft, short prompt) | 65.5 tok/s |
-| Prefill (14.7K prompt, after staging tuning) | 814.6 tok/s |
-| Hot-expert residency (pinned, `--kv-whole`) | 49% |
-| Quantization sweep (Q2/Q4/Q6 quality, 85 tasks) | 82/84/83 — noise band |
-| Full-window prefill (253K tokens) | 265 tok/s |
+| 解码（UD-Q4_K_M + MTP 草稿，短 prompt） | 65.5 tok/s |
+| prefill（14.7K prompt，staging 调优后） | 814.6 tok/s |
+| 热专家驻留（--kv-whole 固定） | 49% |
+| 量化三档质量（Q2/Q4/Q6，85 题） | 82/84/83——噪声带内 |
+| 满窗 prefill（253K token） | 265 tok/s |
 
-See `docs/PERF.md` for methodology and the failure modes that shaped the
-current configuration (kv_grow cache squeeze, Q6 draft famine, staging gaps).
+测试方法和由此形成配置选择的几个失败模式（kv_grow 缓存挤压、Q6 草稿饥荒、staging 空窗）见 docs/PERF.md。

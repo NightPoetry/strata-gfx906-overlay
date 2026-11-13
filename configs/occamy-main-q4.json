@@ -1,10 +1,10 @@
 {
-  "exe": "/data/ai/poly/engine-poly/launch-main.sh",
+  "exe": "/path/to/poly/launch-main.sh",
   "args": [
     "--model",
-    "/data/ai/LoadedModel/occamy-1.0/Qwen3.6-35B-A3B-UD-Q4_K_M.gguf",
+    "/path/to/models/Qwen3.6-35B-A3B-UD-Q4_K_M-nodraft.gguf",
     "--draft-model",
-    "/data/ai/LoadedModel/occamy-1.0/occamy-mtp-q4.gguf",
+    "/path/to/models/mtp-draft-q4.gguf",
     "--max-context",
     "262144",
     "--kv",
@@ -17,7 +17,7 @@
     "--threads",
     "8",
     "--expert-profile",
-    "/data/ai/poly-data/occamy-experts-q4.json",
+    "/path/to/poly-data/occamy-experts-q4.json",
     "--prompt-cache",
     "24",
     "--prompt-cache-every",
@@ -29,11 +29,11 @@
     "--conversation-cache-min-tokens",
     "512"
   ],
-  "cwd": "/data/ai/poly",
-  "tokenizer": "/data/ai/poly-data/packs/occamy/tokenizer",
+  "cwd": "/path/to/poly",
+  "tokenizer": "/path/to/poly-data/packs/occamy/tokenizer",
   "model_name": "occamy-1.0-maineng-q4",
   "arch": "qwen35moe",
-  "log": "/data/ai/poly/strata-occamy-main-q4.log",
+  "log": "/path/to/poly/strata-occamy-main-q4.log",
   "lib_dirs": [
     "/opt/kvmem-hip/rocm-lib"
   ],

@@ -1,8 +1,8 @@
 import sys
 from gguf import GGUFReader, GGUFWriter, GGUFValueType
 
-SRC = "/data/ai/LoadedModel/occamy-1.0/UD-Q2_K_XL-pinned.gguf"
-OUT = "/data/ai/LoadedModel/occamy-1.0/UD-Q2_K_XL-nodraft.gguf"
+SRC = "/path/to/models/UD-Q4_K_M.gguf"
+OUT = "/path/to/models/UD-Q4_K_M-nodraft.gguf"
 
 r = GGUFReader(SRC)
 w = GGUFWriter(OUT, "qwen35moe")

@@ -3,7 +3,7 @@
 import json, os, sys, time, urllib.request
 
 port, tag = sys.argv[1], sys.argv[2]
-BASE = "/data/ai/quant-probe"
+BASE = "/path/to/quant-probe"
 os.makedirs(f"{BASE}/results", exist_ok=True)
 
 def call(body, timeout=900):

@@ -1,6 +1,6 @@
 #!/bin/bash
 # quant-block.sh <tag> — 健康门禁 + 速度块 + 四室探针
-cd /data/ai/quant-probe
+cd /path/to/quant-probe
 for i in $(seq 1 60); do
   curl -s -m 3 http://127.0.0.1:8099/health | grep -q '"status": "ok"' && break
   sleep 5

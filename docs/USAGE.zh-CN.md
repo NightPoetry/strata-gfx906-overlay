@@ -86,7 +86,7 @@ python3 gguf_meta.py Qwen3.6-35B-A3B-UD-Q4_K_M.gguf | grep -E 'general.basename|
 
 ### 3.5 放置
 
-放到如 `/data/ai/LoadedModel/occamy-1.0/`（目录名随意，与 config 同步即可）。
+放到如 `/path/to/models/`（目录随意，config 里的模型路径与之保持一致）。
 
 ## 4. 配置与启动
 
@@ -104,7 +104,7 @@ python3 gguf_meta.py Qwen3.6-35B-A3B-UD-Q4_K_M.gguf | grep -E 'general.basename|
 启动：
 
 ```bash
-cd /data/ai/poly
+cd /path/to/poly          # 你的服务部署目录（含 .venv 与 config）
 .venv/bin/python -m serve.server --engine strata \
   --config occamy-main-q4.json --port 8099
 ```

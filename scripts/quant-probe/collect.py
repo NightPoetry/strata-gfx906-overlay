@@ -1,5 +1,5 @@
 import json, glob, os
-os.chdir("/data/ai/quant-probe/results")
+os.chdir("/path/to/quant-probe/results")
 rows = {}
 for f in sorted(glob.glob("*-speed.json")):
     d = json.load(open(f))

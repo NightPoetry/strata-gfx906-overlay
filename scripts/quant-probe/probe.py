@@ -3,13 +3,13 @@
 # think budget pinned at 8192, uncapped generation (2026-11-01 protocol): per-task
 # think chars / answer chars / total generated tokens are recorded,
 # 思考消耗本身作为跨量化档指标（同 tokenizer 可比）
-# 用法: python3 probe.py <port> <tag> [suite...]  输出: /data/ai/quant-probe/results/<tag>-<suite>.json
+# 用法: python3 probe.py <port> <tag> [suite...]  输出: <BASE>/results/<tag>-<suite>.json
 import json, gzip, os, random, re, subprocess, sys, time, urllib.request
 
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8099"
 TAG = sys.argv[2] if len(sys.argv) > 2 else "run"
 ONLY = set(sys.argv[3:])
-BASE = "/data/ai/quant-probe"
+BASE = "/path/to/quant-probe"
 OUT = os.path.join(BASE, "results")
 os.makedirs(OUT, exist_ok=True)
 random.seed(42)  # 全局定种子: 各量化档抽到同一批题

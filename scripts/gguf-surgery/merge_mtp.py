@@ -3,9 +3,9 @@ import numpy as np
 from gguf import GGUFReader, GGUFWriter, GGUFValueType, GGMLQuantizationType
 from gguf.quants import dequantize
 
-MAIN = "/data/ai/LoadedModel/occamy-1.0/occamy-iq3s.gguf"
-DRAFT = "/data/ai/LoadedModel/occamy-1.0/occamy-mtp-q4.gguf"
-OUT = "/data/ai/LoadedModel/occamy-1.0/occamy-iq3s-mtp.gguf"
+MAIN = "/path/to/models/main.gguf"
+DRAFT = "/path/to/models/mtp-draft-q4.gguf"
+OUT = "/path/to/models/main-mtp.gguf"
 
 # The engine uploads these as F32: they must be F32/BF16/F16/Q8_0 in the file
 F32_REQUIRED = {
